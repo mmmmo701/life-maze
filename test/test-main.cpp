@@ -6,7 +6,6 @@ void basicTest(){
     testingBoard();
     testingGame();
     std::cout << "All test passed!\n";
-    return 0;
 }
 
 int main() {

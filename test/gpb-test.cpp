@@ -32,13 +32,13 @@ void testingBoard() {
 
 void testingGame() {
     Game game = Game();
-    assert(game.getPlayer().getX() == game.getBoard().BOARD_SIZE/2);
-    assert(game.getPlayer().getY() == game.getBoard().BOARD_SIZE/2);
+    assert(game.getPlayer().getX() == game.getBoard().getBOARD_SIZE()/2);
+    assert(game.getPlayer().getY() == game.getBoard().getBOARD_SIZE()/2);
     game.update(Direction::UP);
-    assert(game.getPlayer().getX() == game.getBoard().BOARD_SIZE/2 - 1);
+    assert(game.getPlayer().getX() == game.getBoard().getBOARD_SIZE()/2 - 1);
     bool flag = false;
-    for(int i=0; i<game.getBoard().BOARD_SIZE; i++)
-        for(int j=0; j<game.getBoard().BOARD_SIZE; j++)
+    for(int i=0; i<game.getBoard().getBOARD_SIZE(); i++)
+        for(int j=0; j<game.getBoard().getBOARD_SIZE(); j++)
             flag = flag || (!game.getBoard().isWalkable(i,j));
     assert(flag);
 }

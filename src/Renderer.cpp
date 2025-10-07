@@ -2,19 +2,28 @@
 #include "Game.h"
 #include <iostream>
 
-void draw(const Game& game) const {
+Renderer::Renderer() {}
+
+void Renderer::draw(Game& game) {
     drawBoard(game.getBoard(), game.getPlayer());
     drawUI(game.getPlayer());
 }
 
-void drawBoard(const Board& board, const Player& player) const {
+void Renderer::drawBoard(Board& board, Player& player) {
+    // refresh the screen first (system dependent)
+    #ifdef _WIN32
+    system("cls");
+    #else
+    system("clear");
+    #endif
+    // then draw the board centered on the player
     // Your camera logic from displayBoard() goes here.
-    int size = board.getSize();
     int camX = player.getX();
     int camY = player.getY();
-    int viewSize = 10; // How far the camera can see in each direction.
-    for(int y = camY - viewSize; y <= camY + viewSize; y++) {
-        for(int x = camX - viewSize; x <= camX + viewSize; x++) {
+    int viewSizeX = 12; 
+    int viewSizeY = 20;
+    for(int x = camX - viewSizeX; x <= camX + viewSizeX; x++) {
+        for(int y = camY - viewSizeY; y <= camY + viewSizeY; y++) {
             if(board.isValidTile(x, y)) {
                 if(x == player.getX() && y == player.getY()) {
                     std::cout << player.getSymbol(); // Draw the player
@@ -29,9 +38,9 @@ void drawBoard(const Board& board, const Player& player) const {
     }
 }
 
-void drawUI(const Player& player) const {
+void Renderer::drawUI(Player& player) {
     // For HP, etc.
-    cout<<"HP: " << player.getHP() << "/" << Player::MAX_HP << std::endl;
+    std::cout<<"HP: " << player.getHP() << "/" << player.getMAXHP() << std::endl;
     if(!player.isAlive()) {
         std::cout << "GAME OVER!" << std::endl;
     }

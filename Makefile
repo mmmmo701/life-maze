@@ -22,6 +22,9 @@ TEST_TARGET = run_tests
 # Default rule: builds the main game executable
 all: $(TARGET)
 
+debug: CXXFLAGS += -DDEBUG
+debug: all
+
 # Rule to build and run tests
 test: $(TEST_TARGET)
 	./$(TEST_TARGET)

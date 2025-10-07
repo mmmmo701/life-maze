@@ -9,7 +9,8 @@ Board::Board() {
     for(i=0; i<BOARD_SIZE; i++) {
         grid.push_back(dummy);
         for(j=0; j<BOARD_SIZE; j++){
-            if(i==0 || i==BOARD_SIZE-1 || j==0 || j==BOARD_SIZE-1)
+            if(i==0 || i==BOARD_SIZE-1 || j==0 || j==BOARD_SIZE-1 || 
+                (rand()%5==0 && (i%2==0) && (j%2==0) && i!=BOARD_SIZE/2 && j!=BOARD_SIZE/2))
                 grid[i].push_back('#'); // Wall
             else
                 grid[i].push_back('.');
@@ -34,4 +35,8 @@ void Board::setTile(int x, int y, char c) {
 bool Board::isWalkable(int x, int y) {
     REQUIRES(isValidTile(x, y));
     return getTile(x, y) != '#';
+}
+
+int Board::getBOARD_SIZE() const {
+    return BOARD_SIZE;
 }

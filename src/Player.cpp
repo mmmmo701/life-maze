@@ -1,4 +1,5 @@
 #include "Player.h"
+#include <iostream>
 
 Player::Player(int startX, int startY) : x(startX), y(startY), hp(MAX_HP) {}
 
@@ -12,6 +13,9 @@ void Player::takeDamage(int amount) {
 }
 
 bool Player::isAlive() const {
+    #ifdef DEBUG
+    std::cout << "DEBUG: Player HP = " << hp << std::endl;
+    #endif
     return hp > 0;
 }
 
@@ -29,4 +33,8 @@ int Player::getY() const {
 
 int Player::getHP() const {
     return hp;
+}
+
+int Player::getMAXHP() const {
+    return MAX_HP;
 }

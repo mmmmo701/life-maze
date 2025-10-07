@@ -9,7 +9,8 @@ public:
     void move(int dx, int dy);
     void takeDamage(int amount);
 
-    int getX() const; int getY() const; int getHP() const;
+    int getX() const; int getY() const; 
+    int getHP() const; int getMAXHP() const;
     char getSymbol() const;
     bool isAlive() const;
 

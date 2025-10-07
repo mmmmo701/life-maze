@@ -14,12 +14,12 @@ public:
     bool isWalkable(int x, int y);
     bool isValidTile(int x, int y);
     int getSize() const;
-
-    static const int BOARD_SIZE = 200;
+    int getBOARD_SIZE() const;
 
 private:
     // A 2D vector is more flexible than a C-style array.
     std::vector<std::vector<char> > grid;
+    static const int BOARD_SIZE = 200;
 };
 
 #endif //BOARD_H
