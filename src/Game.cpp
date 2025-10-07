@@ -1,23 +1,26 @@
 #include "Game.h"
 #include <cstdlib>
 
-const Player& Game::getPlayer() const {
+Game::Game() : player(board.BOARD_SIZE / 2, board.BOARD_SIZE / 2), board() {}
+
+Player& Game::getPlayer() {
     return player;
 }
 
-const Board& Game::getBoard() const {
+Board& Game::getBoard() {
     return board;
 }
 
-bool Game::isGameOver() const {
+bool Game::isGameOver() {
     return player.isAlive();
 }
 
 void Game::processMovement(Direction dir) {
-    int newPlayerX = player.getX() + DIRDX[dir];
-    int newPlayerY = player.getY() + DIRDY[dir];
-    if(board.isWalkable(newPlayerX, newPlayerY) && board.isPositionValid(newPlayerX, newPlayerY)) {
-        player.move(DIRDX[dir], DIRDY[dir]);
+    int dirInt = static_cast<int>(dir);
+    int newPlayerX = player.getX() + DIRDX[dirInt];
+    int newPlayerY = player.getY() + DIRDY[dirInt];
+    if(board.isValidTile(newPlayerX, newPlayerY) && board.isWalkable(newPlayerX, newPlayerY)) {
+        player.move(DIRDX[dirInt], DIRDY[dirInt]);
     }
 }
 
@@ -26,7 +29,7 @@ void Game::addRandomObstacle() {
     do {
         obsX = rand() % board.BOARD_SIZE;
         obsY = rand() % board.BOARD_SIZE;
-    } while(!board.isWalkable());
+    } while(!board.isWalkable(obsX, obsY));
     board.setTile(obsX, obsY, '#');
 }
 

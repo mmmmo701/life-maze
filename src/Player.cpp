@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player(int startX, int startY) : x(startX), y(startY), hp(MAX_HP);
+Player::Player(int startX, int startY) : x(startX), y(startY), hp(MAX_HP) {}
 
 void Player::move(int dx, int dy) {
     x += dx;

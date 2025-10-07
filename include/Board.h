@@ -7,18 +7,19 @@ class Board {
 public:
     Board(); // Constructor can set up the initial maze.
 
-    char getTile(int x, int y) const;
+    char getTile(int x, int y);
     void setTile(int x, int y, char c);
 
     // Checks if a given coordinate is a valid, walkable space.
-    bool isWalkable(int x, int y) const;
+    bool isWalkable(int x, int y);
+    bool isValidTile(int x, int y);
     int getSize() const;
 
-private:
-    bool isValidTile(int x, int y);
-    // A 2D vector is more flexible than a C-style array.
-    std::vector<std::vector<char>> grid;
     static const int BOARD_SIZE = 200;
+
+private:
+    // A 2D vector is more flexible than a C-style array.
+    std::vector<std::vector<char> > grid;
 };
 
 #endif //BOARD_H

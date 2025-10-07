@@ -11,23 +11,19 @@ const int DIRDY[4] = {0,0,-1,1};
 
 class Game {
 public:
-    Game() {
-        board = Board();
-        player = Player(board.BOARD_SIZE/2, board.BOARD_SIZE/2);
-    }
+    Game();
 
     // The main update function. It takes a player action and updates the game state.
     void update(Direction dir);
 
     // Functions to provide game state to the outside world (like the Renderer).
-    const Player& getPlayer() const;
-    const Board& getBoard() const;
-    bool isGameOver() const;
+    Player& getPlayer();
+    Board& getBoard();
+    bool isGameOver();
 
 private:
     Player player;
     Board board;
-    bool gameOver;
 
     // A private helper function to handle movement logic.
     void processMovement(Direction dir);
