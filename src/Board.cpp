@@ -34,7 +34,7 @@ void Board::setTile(int x, int y, char c) {
 
 bool Board::isWalkable(int x, int y) {
     REQUIRES(isValidTile(x, y));
-    return getTile(x, y) != '#';
+    return getTile(x, y) == '.';
 }
 
 int Board::getBOARD_SIZE() const {

@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-const std::string BLACK = "\033[0;30m";
+const std::string BLACK = "\033[0;37m";
 
 std::string getColorCodeForHP(int hp, int maxHp) {
     if(hp > maxHp * 0.5) {
@@ -43,7 +43,6 @@ void screenRefresh() {
 }
 
 void Renderer::drawBoard(Board& board, Player& player, std::vector<Monster>& monsters) {
-    
     int camX = player.getX();
     int camY = player.getY();
     int viewSizeX = 12; 
@@ -62,8 +61,14 @@ void Renderer::drawBoard(Board& board, Player& player, std::vector<Monster>& mon
 void Renderer::drawUI(Player& player) {
     // For HP, etc.
     std::cout<<"HP: " << player.getHP() << "/" << player.getMAXHP() << std::endl;
+    while(!msg_buffer.empty()) {
+        std::cout << msg_buffer.front() << std::endl;
+        msg_buffer.erase(msg_buffer.begin());
+    }
+
     if(!player.isAlive()) {
         std::cout << "GAME OVER!" << std::endl;
+        abort();
     }
 }
 

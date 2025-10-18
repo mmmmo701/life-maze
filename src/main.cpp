@@ -27,10 +27,6 @@ Direction getDirectionFromInput() {
 int main() {
     Game game;
     Renderer renderer;
-
-    #ifdef DEBUG
-    std::cout << "DEBUG: Game started." << std::endl;
-    #endif
     
     while (!game.isGameOver()) {
         renderer.draw(game);

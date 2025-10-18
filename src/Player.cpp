@@ -13,9 +13,6 @@ void Player::takeDamage(int amount) {
 }
 
 bool Player::isAlive() const {
-    #ifdef DEBUG
-    std::cout << "DEBUG: Player HP = " << hp << std::endl;
-    #endif
     return hp > 0;
 }
 

@@ -7,11 +7,13 @@
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
+#include <string>
+#include <vector>
 
-// Using an enum for directions is much clearer than 0, 1, 2, 3.
 enum class Direction { UP, DOWN, LEFT, RIGHT };
-const int DIRDX[4] = {-1,1,0,0};
-const int DIRDY[4] = {0,0,-1,1};
+extern const int DIRDX[4];
+extern const int DIRDY[4];
+extern std::vector<std::string> msg_buffer;
 
 class Game {
 public:
@@ -20,7 +22,10 @@ public:
     Player& getPlayer();
     Board& getBoard();
     bool isGameOver();
-    void removeDeadMonsters();
+    void updateMonster();
+    void moveMonster(Monster* monster);
+    int monsterAttack(Monster* monster);
+    bool haveElements(int x, int y);
     std::vector<Monster>& getMonsters() { return monsters; }
 
 private:

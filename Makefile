@@ -42,13 +42,9 @@ $(TEST_TARGET): $(APP_OBJS) $(TEST_OBJS)
 
 # --- Compilation Rule ---
 
-# Generic rule to compile any .cpp file into a .o file
-# VPATH will help make find the .cpp file in either src/ or test/
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-# --- Cleanup Rule ---
-
+	
 clean:
 	rm -f $(APP_OBJS) $(TEST_OBJS) $(TARGET) $(TEST_TARGET)
 

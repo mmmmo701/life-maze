@@ -3,6 +3,7 @@
 
 #include "Player.h"
 #include "Board.h"
+#include <vector>
 #include <algorithm>
 #include <iostream>
 
@@ -10,7 +11,6 @@ class Monster {
 public:
     Monster(int level, int startX, int startY);
     ~Monster() = default;
-    int attack(Player& player);
     int getHealth() const;
     void takeDamage(int amount);
 
@@ -19,7 +19,8 @@ public:
     int getX() const { return x; }
     int getY() const { return y; }
     void setPosition(int newX, int newY) { x = newX; y = newY; }
-    void moveTowardsPlayer(Player& player, Board& board);
+    std::pair<int,int> dirToward(int tarX, int tarY);
+    void move(int dx, int dy) { x += dx; y += dy; }
 
 private:
     int level;
