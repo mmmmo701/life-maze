@@ -24,7 +24,7 @@ void Renderer::drawMonster(Monster& monster) {
 }
 
 void Renderer::drawTile(int x, int y, Board& board, Player& player, std::vector<Monster>& monsters) {
-    for(int i=0;i<monsters.size();i++) {
+    for(int i = 0; i < (int)(monsters.size()); i++) {
         if(monsters[i].getX() == x && monsters[i].getY() == y && monsters[i].isAlive()) {
             drawMonster(monsters[i]);
             return;

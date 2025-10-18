@@ -61,7 +61,7 @@ void Game::spawnMonster() {
 }
 
 void Game::removeDeadMonsters() {
-    for(int i=0; i < monsters.size(); i++)
+    for(int i=0; i < (int)(monsters.size()); i++)
         if(!monsters[i].isAlive())
             monsters.erase(monsters.begin() + i);
 }
