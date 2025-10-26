@@ -5,6 +5,7 @@
 #include "Board.h"
 #include "Monster.h"
 #include <string>
+#include <utility>
 
 enum class Direction { UP, DOWN, LEFT, RIGHT };
 extern const int DIRDX[4];
@@ -27,12 +28,11 @@ public:
     void moveMonster(Monster* monster);
     int monsterAttack(Monster* monster);
 
-    // obstacles
-    int haveElements(int x, int y);
+    // obstacles: occupancy tracked on Board tiles. Use board.getTile / isWalkable.
 
 private:
-    Player player;
     Board board;
+    Player player;
     int round;
     std::vector<Monster> monsters;
 

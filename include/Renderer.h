@@ -4,6 +4,7 @@
 #include "Game.h"
 #include <iostream>
 #include <string>
+#include <utility>
 
 class Renderer {
 public:
@@ -14,11 +15,12 @@ public:
 
 private:
     // Your camera logic from displayBoard() goes here.
-    void drawBoard(Board& board, Player& player, std::vector<Monster>& monsters);
+    // drawBoard now renders directly from the board grid (board.getTile).
+    void drawBoard(Board& board, Player& player);
     void drawUI(Player& player); // For HP, etc.
     void drawPlayer(Player& player);
     void drawMonster(Monster& monster);
-    void drawTile(int x, int y, Board& board, Player& player, std::vector<Monster>& monsters);
+    void drawTile(std::pair<int,int> pos, Board& board);
 };
 
 #endif //RENDERER_H

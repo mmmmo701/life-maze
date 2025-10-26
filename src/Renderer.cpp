@@ -1,40 +1,34 @@
 #include "Renderer.h"
+#include "Board.h"
 
 const std::string BLACK = "\033[0;37m";
 
-std::string getColorCodeForHP(int hp, int maxHp) {
-    if(hp > maxHp * 0.5) {
-        return "\033[1;34m"; // Blue
-    } else if(hp > maxHp * 0.2) {
-        return "\033[1;33m"; // Yellow
-    } else {
-        return "\033[1;31m"; // Red
-    }
+std::string getColorCode(Color color) {
+    if(color == Color::RED)
+        return "\033[31m";
+    else if(color == Color::BLUE)
+        return "\033[34m";
+    else if(color == Color::YELLOW)
+        return "\033[33m";
+    else if(color == Color::MAGNENTA)
+        return "\033[35m";
+    else
+        return "";
 }
 
 Renderer::Renderer() {}
 
-void Renderer::drawPlayer(Player& player) {
-    std::string colorCode = getColorCodeForHP(player.getHP(), player.getMAXHP());
-    std::cout << colorCode << player.getSymbol() << BLACK;
-}
-
-void Renderer::drawMonster(Monster& monster) {
-    std::cout << "\033[1;31m" << monster.getSymbol() << BLACK; // Red for monsters
-}
-
-void Renderer::drawTile(int x, int y, Board& board, Player& player, std::vector<Monster>& monsters) {
-    for(int i = 0; i < (int)(monsters.size()); i++) {
-        if(monsters[i].getX() == x && monsters[i].getY() == y && monsters[i].isAlive()) {
-            drawMonster(monsters[i]);
-            return;
-        }
-    }
-    if(player.getX() == x && player.getY() == y) {
-        drawPlayer(player);
-        return;
-    }
-    std::cout << board.getTile(x, y);
+// drawTile now reads from board.getTile and prints it. Coloring for player/monster
+// can still be applied by checking character, but since board stores the
+// characters we mostly print them directly.
+void Renderer::drawTile(std::pair<int,int> pos, Board& board) {
+    Color color = board.getColor(pos);
+    std::string colorCode = getColorCode(color);
+    std::cout << colorCode;
+    char c = board.getTile(pos);
+    std::cout << c;
+    if(colorCode != "")
+        std::cout << "\033[0m";
 }
 
 void screenRefresh() {
@@ -42,15 +36,16 @@ void screenRefresh() {
     std::cout << "\033[2J\033[1;1H"; // ANSI escape codes to clear screen and move cursor to top-left
 }
 
-void Renderer::drawBoard(Board& board, Player& player, std::vector<Monster>& monsters) {
-    int camX = player.getX();
-    int camY = player.getY();
+void Renderer::drawBoard(Board& board, Player& player) {
+    // Center camera on player's position but draw from the board grid.
+    int camX = player.getPos().first;
+    int camY = player.getPos().second;
     int viewSizeX = 12; 
     int viewSizeY = 20;
     for(int x = camX - viewSizeX; x <= camX + viewSizeX; x++) {
         for(int y = camY - viewSizeY; y <= camY + viewSizeY; y++) {
-            if(board.isValidTile(x, y))
-                drawTile(x, y, board, player, monsters);
+            if(board.isValidTile(std::make_pair(x,y)))
+                drawTile(std::make_pair(x,y), board);
             else
                 std::cout << ' '; 
         }
@@ -74,6 +69,6 @@ void Renderer::drawUI(Player& player) {
 
 void Renderer::draw(Game& game) {
     screenRefresh();
-    drawBoard(game.getBoard(), game.getPlayer(), game.getMonsters());
+    drawBoard(game.getBoard(), game.getPlayer());
     drawUI(game.getPlayer());
 }

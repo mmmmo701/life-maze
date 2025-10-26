@@ -1,22 +1,27 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <utility>
+
 class Player {
 public:
     // Constructor to initialize the player at a starting position.
-    Player(int startX, int startY);
+    Player(std::pair<int,int> startPos);
 
-    void move(int dx, int dy);
+    // Move by a delta (dx,dy)
+    void move(std::pair<int,int> delta);
     void takeDamage(int amount);
 
-    int getX() const; int getY() const; 
+    // Position accessor
+    std::pair<int,int> getPos() const;
+
     int getHP() const; int getMAXHP() const;
     int getATK() const;
     char getSymbol() const;
     bool isAlive() const;
 
 private:
-    int x, y;
+    std::pair<int,int> pos;
     int hp, atk;
     static const int MAX_HP = 1000;
 };

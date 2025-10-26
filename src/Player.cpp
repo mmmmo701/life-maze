@@ -1,11 +1,10 @@
 #include "Player.h"
-#include <iostream>
 
-Player::Player(int startX, int startY) : x(startX), y(startY), hp(MAX_HP), atk(20) {}
+Player::Player(std::pair<int,int> startPos) : pos(startPos), hp(MAX_HP), atk(20) {}
 
-void Player::move(int dx, int dy) {
-    x += dx;
-    y += dy;
+void Player::move(std::pair<int,int> delta) {
+    pos.first += delta.first;
+    pos.second += delta.second;
 }
 
 void Player::takeDamage(int amount) {
@@ -20,12 +19,8 @@ char Player::getSymbol() const {
     return '@';
 }
 
-int Player::getX() const {
-    return x;
-}
-
-int Player::getY() const {
-    return y;
+std::pair<int,int> Player::getPos() const {
+    return pos;
 }
 
 int Player::getHP() const {
