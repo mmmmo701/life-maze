@@ -4,11 +4,7 @@
 #include "Player.h"
 #include "Board.h"
 #include "Monster.h"
-#include <cstdlib>
-#include <iostream>
-#include <cmath>
 #include <string>
-#include <vector>
 
 enum class Direction { UP, DOWN, LEFT, RIGHT };
 extern const int DIRDX[4];
@@ -17,16 +13,22 @@ extern std::vector<std::string> msg_buffer;
 
 class Game {
 public:
+    // game logics
     Game();
     void update(Direction dir);
     Player& getPlayer();
     Board& getBoard();
     bool isGameOver();
+
+    // monsters
+    std::vector<Monster>& getMonsters() { return monsters; }
     void updateMonster();
+    std::pair<int,int>  getMoveMonsterDir(Monster* monster);
     void moveMonster(Monster* monster);
     int monsterAttack(Monster* monster);
-    bool haveElements(int x, int y);
-    std::vector<Monster>& getMonsters() { return monsters; }
+
+    // obstacles
+    int haveElements(int x, int y);
 
 private:
     Player player;

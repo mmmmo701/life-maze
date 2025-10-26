@@ -1,7 +1,7 @@
 #include "Player.h"
 #include <iostream>
 
-Player::Player(int startX, int startY) : x(startX), y(startY), hp(MAX_HP) {}
+Player::Player(int startX, int startY) : x(startX), y(startY), hp(MAX_HP), atk(20) {}
 
 void Player::move(int dx, int dy) {
     x += dx;
@@ -34,4 +34,8 @@ int Player::getHP() const {
 
 int Player::getMAXHP() const {
     return MAX_HP;
+}
+
+int Player::getATK() const {
+    return atk;
 }

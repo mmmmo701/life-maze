@@ -11,12 +11,13 @@ public:
 
     int getX() const; int getY() const; 
     int getHP() const; int getMAXHP() const;
+    int getATK() const;
     char getSymbol() const;
     bool isAlive() const;
 
 private:
     int x, y;
-    int hp;
+    int hp, atk;
     static const int MAX_HP = 1000;
 };
 

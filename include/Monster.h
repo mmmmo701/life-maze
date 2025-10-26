@@ -1,17 +1,14 @@
 #ifndef MONSTER_H
 #define MONSTER_H
 
-#include "Player.h"
-#include "Board.h"
 #include <vector>
-#include <algorithm>
-#include <iostream>
 
 class Monster {
 public:
     Monster(int level, int startX, int startY);
     ~Monster() = default;
     int getHealth() const;
+    int getATK() const;
     void takeDamage(int amount);
 
     char getSymbol() const { return symbol; }
@@ -20,6 +17,7 @@ public:
     int getY() const { return y; }
     void setPosition(int newX, int newY) { x = newX; y = newY; }
     std::pair<int,int> dirToward(int tarX, int tarY);
+    std::pair<int,int> newPosByDir(std::pair<int,int> dir);
     void move(int dx, int dy) { x += dx; y += dy; }
 
 private:
@@ -28,8 +26,6 @@ private:
     int attackPower;
     char symbol;
     int x = 0, y = 0; 
-
-    void move(Player & player, Board& board);
 };
 
 #endif // MONSTER_H
