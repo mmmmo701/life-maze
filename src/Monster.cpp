@@ -9,7 +9,9 @@ Monster::Monster(int level, std::pair<int,int> startPos)
     : level(level), pos(startPos) {
     health = 100 + (level - 1) * 20;
     attackPower = 10 + (level - 1) * 5;
-    symbol = 'A' + (level - 1); // Different symbol per level
+    // Prevent symbol overflow: wrap around after 'Z' or use modulo
+    // Supports up to 26 levels (A-Z), then wraps around
+    symbol = 'A' + ((level - 1) % 26);
 }
 
 int Monster::getHealth() const {

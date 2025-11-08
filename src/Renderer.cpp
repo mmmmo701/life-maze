@@ -56,14 +56,23 @@ void Renderer::drawBoard(Board& board, Player& player) {
 void Renderer::drawUI(Player& player) {
     // For HP, etc.
     std::cout<<"HP: " << player.getHP() << "/" << player.getMAXHP() << std::endl;
-    while(!msg_buffer.empty()) {
-        std::cout << msg_buffer.front() << std::endl;
-        msg_buffer.erase(msg_buffer.begin());
+
+    // Display only the last 5 messages to prevent screen clutter
+    const int MAX_MESSAGES = 5;
+    int startIdx = std::max(0, static_cast<int>(msg_buffer.size()) - MAX_MESSAGES);
+    for(int i = startIdx; i < static_cast<int>(msg_buffer.size()); i++) {
+        std::cout << msg_buffer[i] << std::endl;
+    }
+
+    // Keep only recent messages to prevent unbounded growth
+    if(msg_buffer.size() > MAX_MESSAGES * 2) {
+        msg_buffer.erase(msg_buffer.begin(), msg_buffer.begin() + (msg_buffer.size() - MAX_MESSAGES));
     }
 
     if(!player.isAlive()) {
         std::cout << "GAME OVER!" << std::endl;
-        abort();
+        // Use exit() instead of abort() for graceful cleanup
+        exit(0);
     }
 }
 

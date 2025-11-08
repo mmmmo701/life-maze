@@ -26,7 +26,10 @@ Board& Game::getBoard() { return board; }
 bool Game::isGameOver() { return !player.isAlive(); }
 
 int getNMonstersForRound(int round) {
-    return static_cast<int>(log(std::max(1, round) / 20)) + 2;
+    // Prevent overflow: cap at reasonable maximum
+    const int MAX_MONSTERS_PER_SPAWN = 20;
+    int n = static_cast<int>(log(std::max(1, round) / 20)) + 2;
+    return std::min(n, MAX_MONSTERS_PER_SPAWN);
 }
 
 int getLevelRound(int round) {
@@ -104,13 +107,26 @@ void Game::spawnMonster() {
         for(int i = 0; i < n; ++i) {
             int level = getLevelRound(round);
             std::pair<int,int> spawnPos;
+            int attempts = 0;
+            const int MAX_SPAWN_ATTEMPTS = 100;
+
+            // Try to find valid spawn position, but don't loop forever
             do {
                 spawnPos.first = rand() % board.getBOARD_SIZE();
                 spawnPos.second = rand() % board.getBOARD_SIZE();
+                attempts++;
+                if(attempts >= MAX_SPAWN_ATTEMPTS) {
+                    // Can't find valid spawn - skip this monster
+                    break;
+                }
             } while(board.getTile(spawnPos) != EMPTY || tooClose(spawnPos, player));
-            Monster m = Monster(level, spawnPos);
-            monsters.push_back(m);
-            board.setTile(spawnPos, m.getSymbol(), Color::MAGNENTA);
+
+            // Only spawn if we found a valid position
+            if(attempts < MAX_SPAWN_ATTEMPTS) {
+                Monster m = Monster(level, spawnPos);
+                monsters.push_back(m);
+                board.setTile(spawnPos, m.getSymbol(), Color::MAGNENTA);
+            }
         }
     }
 }
@@ -124,6 +140,9 @@ int Game::monsterAttack(Monster* monster) {
 std::pair<int,int> Game::getMoveMonsterDir(Monster* monster) {
     std::pair<int,int> dir;
     std::pair<int,int> newPos;
+    int attempts = 0;
+    const int MAX_ATTEMPTS = 10;
+
     do {
         if(rand() % 100 <= distToProb(dist(monster->getPos(), player)))
             dir = monster->dirToward(player.getPos());
@@ -132,6 +151,11 @@ std::pair<int,int> Game::getMoveMonsterDir(Monster* monster) {
             dir = std::make_pair(DIRDX[dirID], DIRDY[dirID]);
         }
         newPos = monster->newPosByDir(dir);
+        attempts++;
+        // Safety check: if we can't find valid tile after MAX_ATTEMPTS, stay in place
+        if(attempts >= MAX_ATTEMPTS) {
+            return std::make_pair(0, 0);
+        }
     } while(!board.isValidTile(newPos));
 
     // if target tile is not walkable (occupied/wall), pick another random dir
@@ -148,40 +172,45 @@ void Game::moveMonster(Monster* monster) {
     std::pair<int,int> dir = getMoveMonsterDir(monster);
     std::pair<int,int> newPos = monster->newPosByDir(dir);
 
+    bool hasAttacked = false;
+
     if(board.isValidTile(newPos) && board.getTile(newPos) == EMPTY) {
         // move monster on board
         board.setTile(monster->getPos(), EMPTY, Color::DEFAULT);
         monster->move(dir);
         board.setTile(monster->getPos(), monster->getSymbol(), Color::MAGNENTA);
-    } 
+    }
     else if(board.isValidTile(newPos) && board.getTile(newPos) == p.getSymbol()) {
         // monster moves into player -> attack
         int damage = monsterAttack(monster);
         std::string s;
         s.push_back(monster->getSymbol());
         msg_buffer.push_back("Monster " + s + " attacks player for " + std::to_string(damage) + " damage!");
-        return;
+        hasAttacked = true;
     }
 
-    // proximity attack if adjacent
-    int distSum = abs(monster->getPos().first - p.getPos().first) + abs(monster->getPos().second - p.getPos().second);
-    if(distSum <= 1) {
-        int damage = monsterAttack(monster);
-        std::string s;
-        s.push_back(monster->getSymbol());
-        msg_buffer.push_back("Monster " + s + " attacks player for " + std::to_string(damage) + " damage!");
+    // proximity attack if adjacent (but only if didn't already attack)
+    if(!hasAttacked) {
+        int distSum = abs(monster->getPos().first - p.getPos().first) + abs(monster->getPos().second - p.getPos().second);
+        if(distSum <= 1) {
+            int damage = monsterAttack(monster);
+            std::string s;
+            s.push_back(monster->getSymbol());
+            msg_buffer.push_back("Monster " + s + " attacks player for " + std::to_string(damage) + " damage!");
+        }
     }
 }
 
 void Game::updateMonster() {
-    for(int i = 0; i < (int)(monsters.size()); i++) {
-        if(monsters[i].isAlive()) {
-            moveMonster(&monsters[i]);
+    // Use iterator-based removal for better performance and clarity
+    for(auto it = monsters.begin(); it != monsters.end(); ) {
+        if(it->isAlive()) {
+            moveMonster(&(*it));
+            ++it;
         } else {
             // clear tile on board and erase monster
-            board.setTile(monsters[i].getPos(), EMPTY, Color::DEFAULT);
-            monsters.erase(monsters.begin() + i);
-            i--;
+            board.setTile(it->getPos(), EMPTY, Color::DEFAULT);
+            it = monsters.erase(it); // erase returns next valid iterator
         }
     }
 }

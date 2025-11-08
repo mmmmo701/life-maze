@@ -11,16 +11,20 @@ Direction getDirectionFromInput() {
     while (true) {
         if (_kbhit()) {
             input = _getch();
-            break;
-        }   
+            // Validate input immediately, loop instead of recursion
+            if (input == 'w' || input == 'a' || input == 's' || input == 'd') {
+                break;
+            }
+            // Invalid input - continue waiting for valid key
+        }
     }
-    fflush(stdin); // Clear the input buffer
+    // No need to flush stdin with _getch() - it reads single char directly
     switch (input) {
         case 'w': return Direction::UP;
         case 'a': return Direction::LEFT;
         case 's': return Direction::DOWN;
         case 'd': return Direction::RIGHT;
-        default:  return getDirectionFromInput(); // Simple way to handle bad input
+        default:  return Direction::UP; // Should never reach here due to validation above
     }
 }
 
