@@ -2,25 +2,37 @@
 #define RENDERER_H
 
 #include "Game.h"
-#include <iostream>
+#include <SDL2/SDL.h>
 #include <string>
 #include <utility>
 
 class Renderer {
 public:
     Renderer();
-    
-    // Takes a constant reference to the Game object to ensure it cannot modify it.
+    ~Renderer();
+
+    bool init(const char* title, int width, int height);
     void draw(Game& game);
+    void cleanup();
 
 private:
-    // Your camera logic from displayBoard() goes here.
-    // drawBoard now renders directly from the board grid (board.getTile).
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    int screenWidth;
+    int screenHeight;
+    int tileSize;
+
+    // Camera view settings
+    int viewSizeX;
+    int viewSizeY;
+
+    // Drawing functions
     void drawBoard(Board& board, Player& player);
-    void drawUI(Player& player); // For HP, etc.
-    void drawPlayer(Player& player);
-    void drawMonster(Monster& monster);
-    void drawTile(std::pair<int,int> pos, Board& board);
+    void drawUI(Player& player);
+    void drawTile(std::pair<int,int> pos, char tile, Color color, int screenX, int screenY);
+    void setDrawColor(Color color);
+    void drawRect(int x, int y, int w, int h, bool filled = true);
+    void drawText(const std::string& text, int x, int y);
 };
 
 #endif //RENDERER_H

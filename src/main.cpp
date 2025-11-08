@@ -1,44 +1,79 @@
 #include "Game.h"
 #include "Renderer.h"
-#include "sys-getch.h"
-#include <cstdio>
+#include <SDL2/SDL.h>
 #include <iostream>
-
-// This function translates raw characters into game commands.
-Direction getDirectionFromInput() {
-    char input;
-    // use sys-getch.h for non-blocking single character input
-    while (true) {
-        if (_kbhit()) {
-            input = _getch();
-            // Validate input immediately, loop instead of recursion
-            if (input == 'w' || input == 'a' || input == 's' || input == 'd') {
-                break;
-            }
-            // Invalid input - continue waiting for valid key
-        }
-    }
-    // No need to flush stdin with _getch() - it reads single char directly
-    switch (input) {
-        case 'w': return Direction::UP;
-        case 'a': return Direction::LEFT;
-        case 's': return Direction::DOWN;
-        case 'd': return Direction::RIGHT;
-        default:  return Direction::UP; // Should never reach here due to validation above
-    }
-}
 
 int main() {
     Game game;
     Renderer renderer;
-    
-    while (!game.isGameOver()) {
-        renderer.draw(game);
-        Direction nextMove = getDirectionFromInput();
-        game.update(nextMove);
+
+    // Initialize SDL renderer
+    if (!renderer.init("Life Maze", 1280, 720)) {
+        std::cerr << "Failed to initialize renderer!" << std::endl;
+        return 1;
     }
-    
-    std::cout << "Game Over!" << std::endl;
-    
+
+    bool running = true;
+    bool needsUpdate = false;
+    Direction nextMove = Direction::UP;
+
+    // Main game loop
+    while (running && !game.isGameOver()) {
+        SDL_Event event;
+
+        // Handle events
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+            else if (event.type == SDL_KEYDOWN) {
+                needsUpdate = true;
+                switch (event.key.keysym.sym) {
+                    case SDLK_w:
+                    case SDLK_UP:
+                        nextMove = Direction::UP;
+                        break;
+                    case SDLK_a:
+                    case SDLK_LEFT:
+                        nextMove = Direction::LEFT;
+                        break;
+                    case SDLK_s:
+                    case SDLK_DOWN:
+                        nextMove = Direction::DOWN;
+                        break;
+                    case SDLK_d:
+                    case SDLK_RIGHT:
+                        nextMove = Direction::RIGHT;
+                        break;
+                    case SDLK_ESCAPE:
+                        running = false;
+                        break;
+                    default:
+                        needsUpdate = false;
+                        break;
+                }
+            }
+        }
+
+        // Update game state if a move was made
+        if (needsUpdate) {
+            game.update(nextMove);
+            needsUpdate = false;
+        }
+
+        // Render
+        renderer.draw(game);
+
+        // Small delay to control frame rate
+        SDL_Delay(16); // ~60 FPS
+    }
+
+    if (game.isGameOver()) {
+        std::cout << "Game Over! Final render..." << std::endl;
+        renderer.draw(game);
+        SDL_Delay(3000); // Show game over screen for 3 seconds
+    }
+
+    renderer.cleanup();
     return 0;
 }

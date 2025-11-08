@@ -1,7 +1,8 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -g
+CXXFLAGS = -std=c++17 -Wall -g $(shell pkg-config --cflags sdl2)
 INCLUDES = -Iinclude
+LIBS = $(shell pkg-config --libs sdl2)
 
 # Tell make where to find source files
 VPATH = src test
@@ -33,12 +34,12 @@ test: $(TEST_TARGET)
 
 # Rule to link the main game executable
 $(TARGET): $(APP_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 # Rule to link the test executable
 # It needs both the application objects and the test objects
 $(TEST_TARGET): $(APP_OBJS) $(TEST_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 # --- Compilation Rule ---
 
