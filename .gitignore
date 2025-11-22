@@ -1,1 +1,9 @@
+# Ignore compiled object files
 *.o
+
+# Ignore build directory
+build/
+CMakeLists.txt
+
+# Ignore Claude AI files
+.claude/

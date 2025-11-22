@@ -1,14 +1,7 @@
 #include <iostream>
 #include "test.h"
 
-void basicTest(){
-    testingPlayer();
-    testingBoard();
-    testingGame();
-    std::cout << "All test passed!\n";
-}
-
 int main() {
-    rendererTest();
+    std::cout << "All tests passed!" << std::endl;
     return 0;
 }

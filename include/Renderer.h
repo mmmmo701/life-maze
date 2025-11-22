@@ -2,7 +2,8 @@
 #define RENDERER_H
 
 #include "Game.h"
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
+#include <vector>
 #include <string>
 #include <utility>
 
@@ -28,6 +29,7 @@ private:
 
     // Drawing functions
     void drawBoard(Board& board, Player& player);
+    void drawGameOver();
     void drawUI(Player& player);
     void drawTile(std::pair<int,int> pos, char tile, Color color, int screenX, int screenY);
     void setDrawColor(Color color);

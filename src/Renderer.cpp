@@ -17,17 +17,14 @@ bool Renderer::init(const char* title, int width, int height) {
     screenHeight = height;
 
     // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) { // fixed: SDL_Init returns 0 on success, non-zero on failure
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
     // Create window
-    window = SDL_CreateWindow(title,
-                             SDL_WINDOWPOS_CENTERED,
-                             SDL_WINDOWPOS_CENTERED,
-                             screenWidth, screenHeight,
-                             SDL_WINDOW_SHOWN);
+    // SDL3: SDL_CreateWindow(const char *title, int w, int h, SDL_WindowFlags flags)
+    window = SDL_CreateWindow(title, screenWidth, screenHeight, 0);
 
     if (window == nullptr) {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
@@ -35,7 +32,8 @@ bool Renderer::init(const char* title, int width, int height) {
     }
 
     // Create renderer
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    // SDL3: SDL_CreateRenderer(SDL_Window *window, const char *name)
+    renderer = SDL_CreateRenderer(window, nullptr);
 
     if (renderer == nullptr) {
         std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
@@ -58,6 +56,7 @@ void Renderer::cleanup() {
 }
 
 void Renderer::setDrawColor(Color color) {
+    if (!renderer) return; // guard
     switch(color) {
         case Color::RED:
             SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255);
@@ -78,15 +77,22 @@ void Renderer::setDrawColor(Color color) {
 }
 
 void Renderer::drawRect(int x, int y, int w, int h, bool filled) {
-    SDL_Rect rect = {x, y, w, h};
+    if (!renderer) return; // guard
+
+    // SDL3's SDL_RenderFillRect / SDL_RenderRect expect SDL_FRect (float rects)
+    SDL_FRect rect = { static_cast<float>(x), static_cast<float>(y),
+                       static_cast<float>(w), static_cast<float>(h) };
+
     if (filled) {
         SDL_RenderFillRect(renderer, &rect);
     } else {
-        SDL_RenderDrawRect(renderer, &rect);
+        SDL_RenderRect(renderer, &rect);
     }
 }
 
 void Renderer::drawTile(std::pair<int,int> pos, char tile, Color tileColor, int screenX, int screenY) {
+    if (!renderer) return; // guard
+
     int x = screenX * tileSize;
     int y = screenY * tileSize;
 
@@ -111,7 +117,7 @@ void Renderer::drawTile(std::pair<int,int> pos, char tile, Color tileColor, int 
         for (int i = -radius; i <= radius; i++) {
             for (int j = -radius; j <= radius; j++) {
                 if (i*i + j*j <= radius*radius) {
-                    SDL_RenderDrawPoint(this->renderer, centerX + i, centerY + j);
+                    SDL_RenderPoint(this->renderer, centerX + i, centerY + j);
                 }
             }
         }
@@ -122,7 +128,7 @@ void Renderer::drawTile(std::pair<int,int> pos, char tile, Color tileColor, int 
             for (int j = -radius; j <= radius; j++) {
                 int dist = i*i + j*j;
                 if (dist <= radius*radius && dist >= (radius-1)*(radius-1)) {
-                    SDL_RenderDrawPoint(this->renderer, centerX + i, centerY + j);
+                    SDL_RenderPoint(this->renderer, centerX + i, centerY + j);
                 }
             }
         }
@@ -147,15 +153,15 @@ void Renderer::drawTile(std::pair<int,int> pos, char tile, Color tileColor, int 
 
         // Vertical bars (most letters have these)
         for (int py = 0; py < 7; py++) {
-            SDL_RenderDrawPoint(this->renderer, letterX, letterY + py);
-            SDL_RenderDrawPoint(this->renderer, letterX + 4, letterY + py);
+            SDL_RenderPoint(this->renderer, letterX, letterY + py);
+            SDL_RenderPoint(this->renderer, letterX + 4, letterY + py);
         }
 
         // Horizontal bars based on letter position
         for (int px = 1; px < 4; px++) {
-            SDL_RenderDrawPoint(this->renderer, letterX + px, letterY);     // Top bar
-            SDL_RenderDrawPoint(this->renderer, letterX + px, letterY + 3); // Middle bar
-            SDL_RenderDrawPoint(this->renderer, letterX + px, letterY + 6); // Bottom bar
+            SDL_RenderPoint(this->renderer, letterX + px, letterY);     // Top bar
+            SDL_RenderPoint(this->renderer, letterX + px, letterY + 3); // Middle bar
+            SDL_RenderPoint(this->renderer, letterX + px, letterY + 6); // Bottom bar
         }
     }
     else if (tile == EMPTY) {
@@ -168,6 +174,8 @@ void Renderer::drawTile(std::pair<int,int> pos, char tile, Color tileColor, int 
 }
 
 void Renderer::drawBoard(Board& board, Player& player) {
+    if (!renderer) return; // guard
+
     int camX = player.getPos().first;
     int camY = player.getPos().second;
 
@@ -191,7 +199,88 @@ void Renderer::drawBoard(Board& board, Player& player) {
     }
 }
 
+void Renderer::drawGameOver() {
+    if (!renderer) return; // guard
+
+    // Game over screen
+    // Semi-transparent dark overlay
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
+    drawRect(0, 0, screenWidth, screenHeight, true);
+
+    // Red background box
+    SDL_SetRenderDrawColor(renderer, 180, 30, 30, 255);
+    drawRect(screenWidth/2 - 250, screenHeight/2 - 60, 500, 120, true);
+
+    // Border
+    SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255);
+    drawRect(screenWidth/2 - 250, screenHeight/2 - 60, 500, 120, false);
+    // Draw "GAME OVER" text using large pixels
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    int textX = screenWidth/2 - 140;
+    int textY = screenHeight/2 - 30;
+    int pixelSize = 4;
+
+    // G
+    for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
+    for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
+    for (int y = 6; y < 12; y++) drawRect(textX + 9*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 5; x < 10; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
+
+    textX += 55;
+    // A
+    for (int y = 2; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int y = 2; y < 12; y++) drawRect(textX + 8*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 2*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
+
+    textX += 55;
+    // M
+    for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int y = 0; y < 12; y++) drawRect(textX + 10*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 5; x++) drawRect(textX + x*pixelSize, textY + x*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 6; x < 11; x++) drawRect(textX + x*pixelSize, textY + (10-x)*pixelSize, pixelSize, pixelSize, true);
+
+    textX += 60;
+    // E
+    for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
+    for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
+
+    textX += 70;
+    // O
+    for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int y = 0; y < 12; y++) drawRect(textX + 9*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
+    for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
+
+    textX += 55;
+    // V
+    for (int y = 0; y < 10; y++) drawRect(textX + y*pixelSize/2, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int y = 0; y < 10; y++) drawRect(textX + (18-y)*pixelSize/2, textY + y*pixelSize, pixelSize, pixelSize, true);
+    drawRect(textX + 4*pixelSize, textY + 10*pixelSize, pixelSize, pixelSize, true);
+    drawRect(textX + 4*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
+
+    textX += 55;
+    // E
+    for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
+    for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
+
+    textX += 55;
+    // R
+    for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
+    for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
+    for (int y = 0; y < 6; y++) drawRect(textX + 8*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
+    for (int y = 6; y < 12; y++) drawRect(textX + (y-2)*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
+}
+
 void Renderer::drawUI(Player& player) {
+    if (!renderer) return; // guard
+
     // Draw UI panel at the bottom
     int uiY = (viewSizeY * 2 + 1) * tileSize + 10;
     int uiHeight = screenHeight - uiY;
@@ -231,7 +320,7 @@ void Renderer::drawUI(Player& player) {
     const int MAX_MESSAGES = 3;
 
     // Keep only recent messages to prevent unbounded growth
-    if(msg_buffer.size() > MAX_MESSAGES * 2) {
+    if (msg_buffer.size() > MAX_MESSAGES) {
         msg_buffer.erase(msg_buffer.begin(), msg_buffer.begin() + (msg_buffer.size() - MAX_MESSAGES));
     }
 
@@ -240,85 +329,13 @@ void Renderer::drawUI(Player& player) {
     // For now, messages are tracked but not visually rendered
 
     if(!player.isAlive()) {
-        // Game over screen
-        // Semi-transparent dark overlay
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-        drawRect(0, 0, screenWidth, screenHeight, true);
-
-        // Red background box
-        SDL_SetRenderDrawColor(renderer, 180, 30, 30, 255);
-        drawRect(screenWidth/2 - 250, screenHeight/2 - 60, 500, 120, true);
-
-        // Border
-        SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255);
-        drawRect(screenWidth/2 - 250, screenHeight/2 - 60, 500, 120, false);
-
-        // Draw "GAME OVER" text using large pixels
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        int textX = screenWidth/2 - 140;
-        int textY = screenHeight/2 - 30;
-        int pixelSize = 4;
-
-        // G
-        for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
-        for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
-        for (int y = 6; y < 12; y++) drawRect(textX + 9*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 5; x < 10; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
-
-        textX += 55;
-        // A
-        for (int y = 2; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int y = 2; y < 12; y++) drawRect(textX + 8*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 2*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
-
-        textX += 55;
-        // M
-        for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int y = 0; y < 12; y++) drawRect(textX + 10*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 5; x++) drawRect(textX + x*pixelSize, textY + x*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 6; x < 11; x++) drawRect(textX + x*pixelSize, textY + (10-x)*pixelSize, pixelSize, pixelSize, true);
-
-        textX += 60;
-        // E
-        for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
-        for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
-
-        textX += 70;
-        // O
-        for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int y = 0; y < 12; y++) drawRect(textX + 9*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
-        for (int x = 0; x < 10; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
-
-        textX += 55;
-        // V
-        for (int y = 0; y < 10; y++) drawRect(textX + y*pixelSize/2, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int y = 0; y < 10; y++) drawRect(textX + (18-y)*pixelSize/2, textY + y*pixelSize, pixelSize, pixelSize, true);
-        drawRect(textX + 4*pixelSize, textY + 10*pixelSize, pixelSize, pixelSize, true);
-        drawRect(textX + 4*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
-
-        textX += 55;
-        // E
-        for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
-        for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 9; x++) drawRect(textX + x*pixelSize, textY + 11*pixelSize, pixelSize, pixelSize, true);
-
-        textX += 55;
-        // R
-        for (int y = 0; y < 12; y++) drawRect(textX, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY, pixelSize, pixelSize, true);
-        for (int x = 0; x < 8; x++) drawRect(textX + x*pixelSize, textY + 6*pixelSize, pixelSize, pixelSize, true);
-        for (int y = 0; y < 6; y++) drawRect(textX + 8*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
-        for (int y = 6; y < 12; y++) drawRect(textX + (y-2)*pixelSize, textY + y*pixelSize, pixelSize, pixelSize, true);
+        drawGameOver();
     }
 }
 
 void Renderer::draw(Game& game) {
+    if (!renderer) return; // guard
+
     // Clear screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
